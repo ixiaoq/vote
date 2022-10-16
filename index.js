@@ -4,17 +4,21 @@ const getImagePos = require('./handleCanvas');
 
 const webUrl = 'https://big16.leju.com/vote/detail/96/1368';
 
-(async () => {
-    const browser = await chromium.launch();
-    const page = await browser.newPage();
-    
+const total = 5;
+let i = 1;
+
+async function main () {
+    if (i > total) return console.log(`共完成：${i}次`)
     try {
-        
+        const browser = await chromium.launch();
+        const page = await browser.newPage();
         page.once('load', () => console.log('Page loaded!'));
-        page.once('pageerror', (err) => console.log(err));
 
         await page.goto(webUrl);
         // sleep(1000);
+        console.log(`--- 第 ${i} 次开始 ---`)
+
+        console.log('当前票数：', await page.innerText('.js_vote_count'))
 
         await voteBtnClick(page)
 
@@ -53,14 +57,20 @@ const webUrl = 'https://big16.leju.com/vote/detail/96/1368';
         sleep(1000);
 
         await page.screenshot({ path: `example.png` });
-        console.log('完成')
+        console.log(`--- 完成 ---`)
+        i++
 
         await browser.close();
+
+        main();
     } catch (error) {
         console.log('error', error)
         browser.close();
+        i++
+        main();
     }
-})();
+}
+main();
 
 async function voteBtnClick (page) {
     const allResultsSelector = '.js_active_vote_btn';
