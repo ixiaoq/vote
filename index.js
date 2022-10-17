@@ -1,22 +1,28 @@
 const { chromium } = require('playwright');
-const { Buffer } = require('buffer');
 const getImagePos = require('./handleCanvas');
 
 const webUrl = 'https://big16.leju.com/vote/detail/96/1368';
 
-const total = 5;
-let i = 1;
+const total = 10;
+let count = 1;
+
+console.log(`--- 预设投票次数: ${total} ---`);
+console.log('---------------------------------');
 
 async function main () {
-    if (i > total) return console.log(`共完成：${i}次`)
+    if (total < count) {
+        console.log('--- 完成 ---')
+        console.log(`共投票 ${count} 次`)
+        return
+    }
+
     try {
         const browser = await chromium.launch();
         const page = await browser.newPage();
         page.once('load', () => console.log('Page loaded!'));
 
         await page.goto(webUrl);
-        // sleep(1000);
-        console.log(`--- 第 ${i} 次开始 ---`)
+        console.log(`--- 第 ${count} 次开始 ---`)
 
         console.log('当前票数：', await page.innerText('.js_vote_count'))
 
@@ -25,7 +31,7 @@ async function main () {
         const voteUrl = `https://big16.leju.com/vote/vote/is_vote?work_id=1368&project_id=96`
         await watchVoteApi(page, voteUrl)
 
-        sleep(2000);
+        delay(1000);
 
         const subDataBase64 = await page.getAttribute('#puzzleImageBoxBlock', 'src', { timeout: 10000 })
         const mainDataBase64 = await page.getAttribute('#puzzleImageBoxBg', 'src', { timeout: 10000 })
@@ -54,19 +60,19 @@ async function main () {
         await page.mouse.move(mov_x, y)
         await page.mouse.up();
 
-        sleep(1000);
+        delay(1000);
 
-        await page.screenshot({ path: `example.png` });
-        console.log(`--- 完成 ---`)
-        i++
+        await page.screenshot({ path: `example${count}.png` });
 
         await browser.close();
+
+        count++
 
         main();
     } catch (error) {
         console.log('error', error)
         browser.close();
-        i++
+        count++
         main();
     }
 }
@@ -89,11 +95,15 @@ async function watchVoteApi (page, url) {
 }
 
 /**
- * 模仿sleep性能，提早肯定工夫，单位毫秒
+ * 模仿 delay 性能，提早肯定工夫，单位毫秒
  * Delay for a number of milliseconds
  */
-function sleep(delay) {
-    var start = new Date().getTime();
-    while (new Date().getTime() < start + delay);
+ async function delay (time) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve()
+        }, time)
+    })
 }
+
 
