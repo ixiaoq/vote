@@ -10,15 +10,16 @@ console.log(`--- 预设投票次数: ${total} ---`);
 console.log('---------------------------------');
 
 async function main () {
-    if (total < count) {
+    if (total <= count) {
         console.log('--- 完成 ---')
         console.log(`共投票 ${count} 次`)
         return
     }
 
+    const browser = await chromium.launch();
+    const page = await browser.newPage();
+    
     try {
-        const browser = await chromium.launch();
-        const page = await browser.newPage();
         page.once('load', () => console.log('Page loaded!'));
 
         await page.goto(webUrl);
@@ -31,8 +32,10 @@ async function main () {
         const voteUrl = `https://big16.leju.com/vote/vote/is_vote?work_id=1368&project_id=96`
         await watchVoteApi(page, voteUrl)
 
-        delay(1000);
+        delay(2000);
 
+        // await page.screenshot({ path: `example${count}.png` });
+        
         const subDataBase64 = await page.getAttribute('#puzzleImageBoxBlock', 'src', { timeout: 10000 })
         const mainDataBase64 = await page.getAttribute('#puzzleImageBoxBg', 'src', { timeout: 10000 })
 
@@ -91,6 +94,8 @@ async function watchVoteApi (page, url) {
     // console.log(resData)
     if (resData.success === 0) {
         await voteBtnClick(page)
+    } else {
+        console.log('vote verify ok')
     }
 }
 
